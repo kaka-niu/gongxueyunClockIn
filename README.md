@@ -268,6 +268,6 @@ https://github.com/kaka-niu/gongxueyun-action
 本项目采用MIT许可证，详情请参阅[LICENSE](LICENSE)文件。
 ## 交流讨论
 
-| 交流探讨 | 赞赏 | 赞赏 |
-|---------|------|------|
-| <img src="/image/1.png" alt="交流探讨" width="300" height="360"> | <img src="/image/2.jpg" alt="赞赏" width="300" height="360"> | <img src="/image/3.jpg" alt="赞赏" width="300" height="360"> |
+| 交流探讨 | 群聊 | 联系 | 赞赏 | 赞赏 |
+|---------|------|------|------|------|
+| <img src="/image/qun.jpg" alt="交流探讨" width="100%"> | <img src="/image/4.jpg" alt="群聊" width="100%"> | <img src="/image/1.png" alt="联系" width="100%"> | <img src="/image/2.jpg" alt="赞赏" width="100%"> | <img src="/image/3.jpg" alt="赞赏" width="100%"> |

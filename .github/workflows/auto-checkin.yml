@@ -1,0 +1,69 @@
+name: 工学云自动签到
+
+on:
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '打卡模式'
+        required: true
+        default: 'manual'
+        type: choice
+        options:
+        - manual
+        - morning
+        - evening
+  
+  # 定时任务 - 早上7点执行上班卡
+  schedule:
+    - cron: '0 23 * * *'  # UTC时间23点，对应北京时间7点
+  
+  # 定时任务 - 下午17点执行下班卡
+    - cron: '0 9 * * *'   # UTC时间9点，对应北京时间17点
+
+jobs:
+  check-in:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: [morning, evening]
+      fail-fast: false
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+    
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyyaml  # 添加yaml支持
+    
+    - name: 早上打卡
+      if: matrix.mode == 'morning' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'morning')
+      env:
+        USERS: ${{ secrets.USERS }}
+        MODE: morning
+      run: |
+        python auto.py
+    
+    - name: 下午打卡
+      if: matrix.mode == 'evening' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'evening')
+      env:
+        USERS: ${{ secrets.USERS }}
+        MODE: evening
+      run: |
+        python auto.py
+    
+    - name: 手动打卡
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'manual'
+      env:
+        USERS: ${{ secrets.USERS }}
+        MODE: manual
+      run: |
+        python auto.py

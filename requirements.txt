@@ -1,0 +1,7 @@
+aes_pkcs5==1.0.3
+numpy==2.3.5
+onnxruntime==1.20.1
+opencv_python_headless==4.10.0.84
+Requests==2.32.5
+schedule==1.2.2
+PyYAML>=6.0

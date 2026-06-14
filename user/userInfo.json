@@ -1,0 +1,53 @@
+{
+    "userInfo": {
+        "authType": 2,
+        "expiredTime": 1782647062000,
+        "gender": 1,
+        "headImg": "f005585371b08470a447374c1a8e85c7.png",
+        "isAccount": 0,
+        "isGraduate": 0,
+        "moguNo": "10437345",
+        "msgConfig": {},
+        "neteaseImId": "d2e20ae0659246819575eb278872576c",
+        "nikeName": "苟书豪",
+        "orgJson": {
+            "classId": "0ee0171f13a3208cc2db586efe299271",
+            "className": "智能231",
+            "depId": "ef9deebb84b530d2f1c9de3db5af5cdb",
+            "depName": "电子信息学院",
+            "educational": "三年",
+            "grade": "2023",
+            "majorField": "",
+            "majorId": "e96d2943ce7d4fd9baf262843450ce41",
+            "majorName": "智能产品开发与应用",
+            "schoolId": "f217a719d8f5c8b1dd1d628b17da70d0",
+            "schoolName": "绵阳职业技术学院",
+            "snowFlakeId": "1000373",
+            "studentId": "a2102beeeb1063a40ef12e11e180532b",
+            "studentNumber": "202304471",
+            "userName": "苟书豪"
+        },
+        "phone": "15984051417",
+        "roleGroup": [
+            {
+                "currPage": 1,
+                "orderBy": "create_time",
+                "pageSize": 10,
+                "roleId": "1123121137695158273",
+                "roleKey": "student",
+                "roleLevel": "0",
+                "roleName": "学生",
+                "sort": "desc",
+                "totalCount": 0,
+                "totalPage": 0
+            }
+        ],
+        "roleId": "1123121137695158273",
+        "roleKey": "student",
+        "roleLevel": "0",
+        "roleName": "学生",
+        "token": "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJtb2d1ZGluZy11c2VyIiwic3ViIjoie1widXNlcklkXCI6MTA4MjQ1NTI4LFwibG9naW5UeXBlXCI6XCJhbmRyb2lkXCJ9IiwiYXVkIjoibW9ndWRpbmciLCJleHAiOjE3ODI2NDcwNjIsIm5iZiI6MTc4MTQzNjU2MiwiaWF0IjoxNzgxNDM3NDYyfQ.epY4wfNSonaNL13NX5VgDWPh6KbTc6XBjO_y3LAylLNJvV7uLZUw2-6fBn4BgYNP_ZoLc324BYdjN2XtOBbMRg",
+        "userId": "108245528",
+        "userType": "student"
+    }
+}

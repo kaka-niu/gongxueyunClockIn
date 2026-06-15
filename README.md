@@ -3,11 +3,14 @@
 这是一个基于GitHub Actions的工学云自动签到系统，支持多用户配置，可以自动执行上班卡和下班卡的签到操作。
 
 ## 效果展示
-**签到成功**：
-<img src="image/签到.jpg" width="360" height="600">
-
-**消息推送**：
-<img src="image/消息推送.png" width="488" height="600">
+<p align="center">
+  <img src="image/签到.jpg" width="40%" style="border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15)">
+  &nbsp;&nbsp;
+  <img src="image/消息推送.png" width="45%" style="border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15)">
+</p>
+<p align="center">
+  <sub><b>签到成功</b>（左）&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>消息推送</b>（右）</sub>
+</p>
 ## 功能特点
 
 - ✅ 支持多用户配置

@@ -784,7 +784,9 @@ def recognize_clickWord_captcha(target: str, wordlist: list) -> str:
     if os.environ.get('SAVE_CAPTCHA_SNAPSHOTS') == '1':
         import os as _os
         import time as _time
-        snapshot_dir = "captcha_snapshots"
+        import sys as _sys
+        _os.chdir(_os.path.dirname(_os.path.abspath(_sys.argv[0])))
+        snapshot_dir = _os.path.join(_os.path.dirname(_os.path.abspath(_sys.argv[0])), "captcha_snapshots")
         _os.makedirs(snapshot_dir, exist_ok=True)
         timestamp = _time.strftime("%Y%m%d_%H%M%S")
         snapshot_path = _os.path.join(snapshot_dir, f"before_verify_{timestamp}.png")

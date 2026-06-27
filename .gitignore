@@ -1,0 +1,31 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+ENV
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# User config (contains sensitive info)
+user/userInfo.json
+
+# Other
+.DS_Store
+Thumbs.db

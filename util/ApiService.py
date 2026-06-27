@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # 常量
 BASE_URL = "https://api.moguding.net:9000/"
 HEADERS = {
-    "user-agent": "Mozilla/5.0 (Linux; Android 10; V1965A Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/118.0.0.0 Mobile Safari/537.36",
+    "user-agent": "Mozilla/5.0 (Linux; Android 16; 2510DRK44C Build/BP2A.250605.081) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.260 Mobile Safari/537.36",
     "content-type": "application/json; charset=utf-8",
     "accept-encoding": "gzip",
     "host": "api.moguding.net:9000",
@@ -67,6 +67,7 @@ class ApiService:
                                      timeout=10)
             response.raise_for_status()
             rsp = response.json()
+            logger.info(f"API响应 [{url}]: code={rsp.get('code')}, msg={rsp.get('msg')}")
 
             if rsp.get("code") == 200 and rsp.get("msg", "未知错误") == "302":
                 raise ValueError("打卡失败，触发行为验证码")
@@ -198,10 +199,12 @@ class ApiService:
             if os.environ.get('SAVE_CAPTCHA_SNAPSHOTS') == '1':
                 try:
                     import os as _os
+                    import sys as _sys
                     import cv2
                     import base64
                     import json
-                    snapshot_dir = "captcha_snapshots"
+                    _os.chdir(_os.path.dirname(_os.path.abspath(_sys.argv[0])))
+                    snapshot_dir = _os.path.join(_os.path.dirname(_os.path.abspath(_sys.argv[0])), "captcha_snapshots")
                     _os.makedirs(snapshot_dir, exist_ok=True)
                     timestamp = time.strftime("%Y%m%d_%H%M%S")
                     before_submit_path = _os.path.join(snapshot_dir, f"before_submit_{timestamp}.png")
@@ -263,13 +266,16 @@ class ApiService:
                 # 验证成功后保存验证码图片快照 - 仅在手动测试模式下
                 if os.environ.get('SAVE_CAPTCHA_SNAPSHOTS') == '1':
                     try:
+                        import os as _os
+                        import sys as _sys
                         import cv2
                         import base64
                         import json
-                        snapshot_dir = "captcha_snapshots"
-                        os.makedirs(snapshot_dir, exist_ok=True)
+                        _os.chdir(_os.path.dirname(_os.path.abspath(_sys.argv[0])))
+                        snapshot_dir = _os.path.join(_os.path.dirname(_os.path.abspath(_sys.argv[0])), "captcha_snapshots")
+                        _os.makedirs(snapshot_dir, exist_ok=True)
                         timestamp = time.strftime("%Y%m%d_%H%M%S")
-                        after_verify_path = os.path.join(snapshot_dir, f"after_verify_{timestamp}.png")
+                        after_verify_path = _os.path.join(snapshot_dir, f"after_verify_{timestamp}.png")
                         captcha_bytes = base64.b64decode(captcha_response["data"]["originalImageBase64"])
                         captcha_image = cv2.imdecode(np.frombuffer(captcha_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
                         try:
@@ -301,13 +307,16 @@ class ApiService:
                 # 验证失败时也保存快照 - 仅在手动测试模式下
                 if os.environ.get('SAVE_CAPTCHA_SNAPSHOTS') == '1':
                     try:
+                        import os as _os
+                        import sys as _sys
                         import cv2
                         import base64
                         import json
-                        snapshot_dir = "captcha_snapshots"
-                        os.makedirs(snapshot_dir, exist_ok=True)
+                        _os.chdir(_os.path.dirname(_os.path.abspath(_sys.argv[0])))
+                        snapshot_dir = _os.path.join(_os.path.dirname(_os.path.abspath(_sys.argv[0])), "captcha_snapshots")
+                        _os.makedirs(snapshot_dir, exist_ok=True)
                         timestamp = time.strftime("%Y%m%d_%H%M%S")
-                        failed_verify_path = os.path.join(snapshot_dir, f"failed_verify_{timestamp}.png")
+                        failed_verify_path = _os.path.join(snapshot_dir, f"failed_verify_{timestamp}.png")
                         captcha_bytes = base64.b64decode(captcha_response["data"]["originalImageBase64"])
                         captcha_image = cv2.imdecode(np.frombuffer(captcha_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
                         try:
@@ -379,7 +388,7 @@ class ApiService:
                 "loginType": "android",
                 "uuid": str(uuid.uuid4()).replace("-", ""),
                 "device": "android",
-                "version": "5.16.0",
+                "version": "5.31.6",
                 "t": aes_encrypt(str(int(time.time() * 1000))),
             }
 
@@ -468,8 +477,24 @@ class ApiService:
                 aes_encrypt(str(int(time.time() * 1000))),
         }
         rsp = self._post_request(url, headers, data)
-        # 每月第一天的第一次打卡返回的是空，所以特殊处理返回空字典
-        return rsp.get("data", [{}])[0] if rsp.get("data") else {}
+        logger.info(f"打卡记录查询响应: code={rsp.get('code')}, msg={rsp.get('msg')}, data_type={type(rsp.get('data')).__name__}")
+        if isinstance(rsp.get('data'), list):
+            logger.info(f"data数组长度: {len(rsp.get('data', []))}")
+            if rsp.get('data'):
+                first_item = rsp['data'][0]
+                logger.info(f"data[0] keys: {list(first_item.keys()) if isinstance(first_item, dict) else type(first_item).__name__}")
+                if isinstance(first_item, dict):
+                    log_list = first_item.get('logDtoList', [])
+                    logger.info(f"logDtoList长度: {len(log_list)}, 类型: {[l.get('type') for l in log_list]}, 时间: {[l.get('createTime') for l in log_list]}")
+        elif isinstance(rsp.get('data'), dict):
+            logger.info(f"data keys: {list(rsp['data'].keys())}")
+        # 返回打卡记录列表，兼容新旧格式
+        data = rsp.get("data")
+        if isinstance(data, list):
+            if data and isinstance(data[0], dict) and "logDtoList" in data[0]:
+                return data[0]
+            return data
+        return data if data else {}
 
     def has_morning_clock_in_today(self) -> bool:
         """
@@ -485,7 +510,13 @@ class ApiService:
             logger.info(f"未获取到打卡记录，判定今日({today_str})未打上班卡")
             return False
 
-        log_list = checkin_data.get("logDtoList", [])
+        # 兼容新旧格式：新格式是list，旧格式是dict带logDtoList
+        if isinstance(checkin_data, list):
+            log_list = checkin_data
+        else:
+            log_list = checkin_data.get("logDtoList", [])
+
+        logger.info(f"打卡记录数: {len(log_list)}, 记录类型: {[log.get('type') for log in log_list[:5]]}, 记录时间: {[log.get('createTime') for log in log_list[:5]]}")
         if not log_list:
             logger.info(f"今日({today_str})无打卡记录，未打上班卡")
             return False
@@ -513,7 +544,12 @@ class ApiService:
         if not checkin_data:
             return False
 
-        log_list = checkin_data.get("logDtoList", [])
+        # 兼容新旧格式
+        if isinstance(checkin_data, list):
+            log_list = checkin_data
+        else:
+            log_list = checkin_data.get("logDtoList", [])
+
         if not log_list:
             return False
 
@@ -586,7 +622,7 @@ class ApiService:
         planId = PlanInfoManager.get_plan_id()
 
         if UserInfoManager.get("userType") != "teacher":
-            url = "attendence/clock/v5/save"
+            url = "attendence/clock/v6/save"
             sign_data = [
                 ConfigManager.get("device"),
                 checkin_info.get("type"),
@@ -638,6 +674,7 @@ class ApiService:
             "isBeyondFence": None,
             "practiceAddress": None,
             "tpJobId": None,
+            "version": "5.31.6",
             "t": aes_encrypt(str(int(time.time() * 1000))),
         }
 

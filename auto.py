@@ -181,12 +181,7 @@ def execute_clock_in(user_config, clock_type=None):
                 return True
         
         # 执行打卡
-        if clock_type == "上班":
-            result = clock_in(force_type="START")
-        elif clock_type == "下班":
-            result = clock_in(force_type="END")
-        else:
-            result = clock_in()
+        result = clock_in()
         logging.info(f"用户 {phone} 打卡结果: {result}")
         
         # 发送邮件通知

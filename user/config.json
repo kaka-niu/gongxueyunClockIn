@@ -1,0 +1,44 @@
+{
+  "config": {
+    "user": {
+      "phone": "15808462201",
+      "password": "123456Qw"
+    },
+    "clockIn": {
+      "mode": "twice_daily",
+      "location": {
+        "address": "四川省 · 资阳市 · 乐至县 · 友谊路南段与川西环线交叉口东北300米",
+        "latitude": "30.428727249834488",
+        "longitude": "104.90286311986283",
+        "province": "四川省",
+        "city": "资阳市",
+        "area": "乐至县"
+      },
+      "holidaysClockIn": false,
+      "customDays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "time": { 
+        "start": "7:00",
+        "end": "17:00",
+        "float": 1
+      }
+    },
+    "smtp": {
+      "enable": true,
+      "host": "smtp.qq.com",
+      "port": 465,
+      "username": "2154335573@qq.com",
+      "password": "yjociyslhygwebgc",
+      "from": "gongxueyun",
+      "to": [
+        "2154335573@qq.com"      
+      ]
+    },
+    "device": "{brand: iOOZ9 Turbo, systemVersion: 15, Platform: Android, isPhysicalDevice: true, incremental: V2352A}"
+  }
+}

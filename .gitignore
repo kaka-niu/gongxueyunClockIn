@@ -1,0 +1,15 @@
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
+/.idea/workspace.xml
+/build/
+/gongxueyun.spec
+/dist/user/
+/user/config_backup.json
+/main.spec
+/user/planInfo.json
+/user/userInfo.json
+/.idea/misc.xml
+/dist/main.log
+/main.log

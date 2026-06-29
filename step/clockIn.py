@@ -26,15 +26,29 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     api_client = ApiService()
     # 获取打卡信息
     last_checkin_info = api_client.get_checkin_info()
+    logger.info(f"获取到最近打卡信息: {last_checkin_info}")
+    logger.info(f"本次打卡类型: {checkin_type}, 最近打卡类型: {last_checkin_info.get('type') if last_checkin_info else None}")
     # 检查是否已经打过卡
-    if last_checkin_info and last_checkin_info["type"] == checkin_type:
+    if last_checkin_info:
         last_checkin_time = datetime.strptime(
             last_checkin_info["createTime"], "%Y-%m-%d %H:%M:%S")
+        logger.info(f"最近打卡时间: {last_checkin_time}, 当前时间: {current_time}")
+        logger.info(f"日期比较: 最近 {last_checkin_time.date()}, 当前 {current_time.date()}, 是否同一天: {last_checkin_time.date() == current_time.date()}")
         if last_checkin_time.date() == current_time.date():
-            log = f"今日[{display_type}]卡已打，无需重复打卡"
-            logger.info(log)
-            # return {"title": "工学云签到任务通知", "content": log}
-            return {"result": True, "title": "工学云签到任务通知", "content": log}
+            last_type = last_checkin_info["type"]
+            # 如果最近一次打卡是 END，说明上下班都已打完，跳过所有
+            if last_type == "END":
+                log = f"今日上下班卡均已打完，无需重复打卡"
+                logger.info(log)
+                return {"result": True, "title": "工学云签到任务通知", "content": log}
+            # 如果最近一次打卡类型与当前相同，跳过
+            if last_type == checkin_type:
+                log = f"今日[{display_type}]卡已打，无需重复打卡"
+                logger.info(log)
+                # return {"title": "工学云签到任务通知", "content": log}
+                return {"result": True, "title": "工学云签到任务通知", "content": log}
+    else:
+        logger.info(f"最近打卡信息为空，执行打卡")
 
     user_name = desensitize_name(UserInfoManager.get("nikeName"))
     logger.info(f"用户 {user_name} 开始 {display_type} 打卡")

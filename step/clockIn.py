@@ -52,8 +52,10 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     # 记录获取结果
     if success.get("result"):
         logger.info("打卡成功")
-        content = f"签到账号：{ConfigManager.get("user", "phone")}\n签到地点：{ConfigManager.get("clockIn", "location", "address")}"
+        # content = f"签到账号：{ConfigManager.get("user", "phone")}\n签到地点：{ConfigManager.get("clockIn", "location", "address")}"
+        content = f"签到账号：{ConfigManager.get('user', 'phone')}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
         return {"title": "工学云签到成功通知", "content": content}
     else:
-        logger.warning(f"打卡失败：{success.get("message")}")
+        # logger.warning(f"打卡失败：{success.get("message")}")
+        logger.warning(f"打卡失败：{success.get('message')}")
         return {"title": "fail", "content": success.get("message")}

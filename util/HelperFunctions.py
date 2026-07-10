@@ -1,6 +1,6 @@
 import logging
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import requests
 
@@ -14,9 +14,6 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# 北京时区 (UTC+8)
-BEIJING_TZ = timezone(timedelta(hours=8))
-
 
 def get_current_month_info() -> dict:
     """
@@ -28,9 +25,7 @@ def get_current_month_info() -> dict:
     Returns:
         包含当前月份开始和结束时间的字典。
     """
-    # now = datetime.now()
-    # GitHub Actions 环境使用 UTC 时区，需显式使用北京时间
-    now = datetime.now(BEIJING_TZ).replace(tzinfo=None)
+    now = datetime.now()
     # 当前月份的第一天
     start_of_month = datetime(now.year, now.month, 1)
 
@@ -71,38 +66,39 @@ def desensitize_name(name: str) -> str:
 
 def desensitize_phone(phone: str) -> str:
     """
-    对手机号进行脱敏处理，保留前3位和后4位，中间用****替换。
+    对手机号进行脱敏处理，保留前3位和后4位，中间用星号替代。
 
     Args:
         phone (str): 待脱敏的手机号。
 
     Returns:
-        str: 脱敏后的手机号。
+        str: 脱敏后的手机号，如 138****1234。
     """
-    phone = str(phone).strip()
-    if len(phone) < 7:
-        return phone[:3] + "***"
-    return phone[:3] + "****" + phone[-4:]
+    phone = phone.strip()
+    n = len(phone)
+    if n < 7:
+        return phone[:1] + '*' * (n - 1) if n > 1 else '*'
+    return f"{phone[:3]}{'*' * (n - 7)}{phone[-4:]}"
 
 
 def desensitize_address(address: str) -> str:
     """
-    对地址进行脱敏处理，保留省市区，隐藏详细地址。
+    对地址进行脱敏处理，保留省市信息，详细地址用星号替代。
 
     Args:
-        address (str): 待脱敏的地址，格式如 "四川省 · 成都市 · 高新区 · 天府大道北段1480号1号楼"。
+        address (str): 待脱敏的地址。
 
     Returns:
-        str: 脱敏后的地址。
+        str: 脱敏后的地址，如 四川省 · 成都市 · ***。
     """
-    address = str(address).strip()
-    if " · " in address:
-        parts = address.split(" · ")
-        if len(parts) >= 3:
-            return " · ".join(parts[:3]) + " · ***"
-        elif len(parts) == 2:
-            return parts[0] + " · " + parts[1] + " · ***"
-    return "***"
+    address = address.strip()
+    if not address:
+        return address
+    parts = address.split('·')
+    if len(parts) >= 3:
+        parts = parts[:2] + ['***']
+        return ' · '.join(p.strip() for p in parts)
+    return address[:3] + '***' if len(address) > 3 else '***'
 
 
 def is_workday_realtime() -> bool:
@@ -116,9 +112,7 @@ def is_workday_realtime() -> bool:
         bool: True 表示是法定工作日，False 表示是非工作日（周末或节假日）
     """
 
-    # check_date = datetime.today()
-    # GitHub Actions 环境使用 UTC 时区，需显式使用北京时间判断工作日
-    check_date = datetime.now(BEIJING_TZ).replace(tzinfo=None)
+    check_date = datetime.today()
     date_str = check_date.strftime("%Y-%m-%d")
     url = f"https://timor.tech/api/holiday/info/{date_str}"
 

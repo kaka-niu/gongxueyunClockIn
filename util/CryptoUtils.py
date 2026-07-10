@@ -26,7 +26,10 @@ def create_sign(*args) -> str:
         # 将所有输入参数连接成一个长字符串，并在末尾添加盐值
         sign_str = "".join(args) + "3478cbbc33f84bd00d75d7dfa69e0daa"
         # 使用MD5对最终字符串进行加密，并返回加密后的十六进制签名
-        return md5(sign_str.encode("utf-8")).hexdigest()
+        sign_result = md5(sign_str.encode("utf-8")).hexdigest()
+        logger.info(f"[DEBUG] create_sign 拼接: {repr(sign_str)}")
+        logger.info(f"[DEBUG] create_sign 结果: {sign_result}")
+        return sign_result
 
     except Exception as e:
         logger.error(f"签名生成失败: {e}")

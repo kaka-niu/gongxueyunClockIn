@@ -3,6 +3,7 @@ import logging
 from manager.ConfigManager import ConfigManager
 from manager.UserInfoManager import UserInfoManager
 from util.ApiService import ApiService
+from util.HelperFunctions import desensitize_phone
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,11 @@ def login() -> bool:
     """
     logging.info("检查登录状态")
     token = UserInfoManager.get_token()
-    isSame = ConfigManager.get("user", "phone") == UserInfoManager.get("phone")
+    # isSame = ConfigManager.get("user", "phone") == UserInfoManager.get("phone")
+    # 两边都脱敏后再比对，因为 userInfo.json 中 phone 已脱敏存储
+    config_phone = ConfigManager.get("user", "phone") or ""
+    cache_phone = UserInfoManager.get("phone") or ""
+    isSame = desensitize_phone(config_phone) == desensitize_phone(cache_phone)
     if isSame:
         if token:
             logger.info("检测到本地 token，跳过登录")

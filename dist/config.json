@@ -1,0 +1,44 @@
+{
+  "config": {
+    "user": {
+      "phone": "工学云手机号",
+      "password": "密码"
+    },
+    "clockIn": {
+      "mode": "everyday",
+      "location": {
+        "address": "四川省 · 成都市 · 高新区 · 在科创十一街附近",
+        "latitude": "30.559922",
+        "longitude": "104.093023",
+        "province": "四川省",
+        "city": "成都市",
+        "area": "高新区"
+      },
+      "holidaysClockIn": false,
+      "customDays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "time": {
+        "start": "08:00",
+        "float": 10
+      }
+    },
+    "smtp": {
+      "enable": true,
+      "host": "smtp服务地址",
+      "port": 465,
+      "username": "发件人邮箱",
+      "password": "smtp密码",
+      "from": "发件人名称",
+      "to": [
+        "收件人邮箱1",
+        "收件人邮箱2"
+      ]
+    },
+    "device": "{brand: Xiaomi 17Pro, systemVersion: 16, Platform: Android, isPhysicalDevice: true, incremental: 25098PN5AC}"
+  }
+}

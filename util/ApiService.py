@@ -363,7 +363,8 @@ class ApiService:
         }
         rsp = self._post_request(url, headers, data)
         # 每月第一天的第一次打卡返回的是空，所以特殊处理返回空字典
-        return rsp.get("data", [{}])[0] if rsp.get("data") else {}
+        # return rsp.get("data", [{}])[0] if rsp.get("data") else {}
+        return rsp.get("data", [])
 
     def submit_clock_in(self, checkin_info: Dict[str, Any]) -> dict[str, dict[str, Any] | bool] | None:
         """

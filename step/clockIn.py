@@ -25,15 +25,25 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     # 调用API服务
     api_client = ApiService()
     # 获取打卡信息
-    last_checkin_info = api_client.get_checkin_info()
-    # 检查是否已经打过卡
-    if last_checkin_info and last_checkin_info["type"] == checkin_type:
-        last_checkin_time = datetime.strptime(
-            last_checkin_info["createTime"], "%Y-%m-%d %H:%M:%S")
-        if last_checkin_time.date() == current_time.date():
-            log = f"今日[{display_type}]卡已打，无需重复打卡"
-            logger.info(log)
-            return {"title": "工学云签到任务通知", "content": log}
+    # last_checkin_info = api_client.get_checkin_info()
+    # # 检查是否已经打过卡
+    # if last_checkin_info and last_checkin_info["type"] == checkin_type:
+    #     last_checkin_time = datetime.strptime(
+    #         last_checkin_info["createTime"], "%Y-%m-%d %H:%M:%S")
+    #     if last_checkin_time.date() == current_time.date():
+    #         log = f"今日[{display_type}]卡已打，无需重复打卡"
+    #         logger.info(log)
+    #         return {"title": "工学云签到任务通知", "content": log}
+    checkin_list = api_client.get_checkin_info()
+    # 遍历所有打卡记录，检查今日是否已打过同类型卡
+    for record in checkin_list:
+        if record.get("type") == checkin_type:
+            record_time = datetime.strptime(
+                record.get("createTime"), "%Y-%m-%d %H:%M:%S")
+            if record_time.date() == current_time.date():
+                log = f"今日[{display_type}]卡已打，无需重复打卡"
+                logger.info(log)
+                return {"title": "工学云签到任务通知", "content": log}
 
     user_name = desensitize_name(UserInfoManager.get("nikeName"))
     logger.info(f"用户 {user_name} 开始 {display_type} 打卡")
@@ -41,7 +51,8 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     # 设置打卡信息
     checkin_info = {
         "type": checkin_type,
-        "lastDetailAddress": last_checkin_info.get("address"),
+        # "lastDetailAddress": last_checkin_info.get("address"),
+        "lastDetailAddress": checkin_list[0].get("address") if checkin_list else None,
         "attachments": None,
         "description": "",
     }

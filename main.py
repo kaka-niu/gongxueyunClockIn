@@ -24,47 +24,6 @@ logging.basicConfig(
 )
 
 
-# 原代码（单用户）：
-# def execute_tasks():
-#     try:
-#         logging.info("开始执行打卡任务")
-#         # 登录
-#         isLogin = login()
-#         if not isLogin:
-#             logging.warning("登录失败")
-#             input("按回车键退出...")  # 阻塞窗口，方便查看
-#             return
-#
-#         logging.info(f"用户类型：{UserInfoManager.get('roleKey')}")
-#         if UserInfoManager.get("userType") != "student":
-#             logging.error("当前用户不是学生，结束执行打卡任务")
-#             input("按回车键退出...")
-#             return
-#
-#         # 获取打卡信息
-#         hasPlan = fetch_plan()
-#         if not hasPlan:
-#             logging.warning("未获取到打卡信息")
-#             input("按回车键退出...")
-#             return
-#
-#         # 根据模式执行打卡（支持 twice_daily 一天两次打卡）
-#         checkin_types = get_checkin_types()
-#         logging.info(f"打卡模式：{ConfigManager.get('clockIn', 'mode', default='single')}，共 {len(checkin_types)} 次打卡")
-#         for checkin in checkin_types:
-#             result = clock_in(force_type=checkin)
-#             logging.info(result)
-#
-#         logging.info("打卡任务完成")
-#         input("按回车键退出...")
-#
-#     except Exception as e:
-#         logging.error("执行打卡任务时发生异常")
-#         logging.error(traceback.format_exc())
-#         input("按回车键退出...")
-
-
-# 新代码（支持多用户）：
 def execute_tasks_for_user(user_index: int) -> bool:
     """为单个用户执行打卡任务"""
     try:

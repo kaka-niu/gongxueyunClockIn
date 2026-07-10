@@ -478,39 +478,38 @@ class ApiService:
             #     return {"result": False, "data": rsp, "message": rsp.get("msg", "打卡失败")}
             return self._check_clock_in_response(rsp)
         
-        # 原代码（处理304人脸认证，尝试绕过）：
+        # 原代码（点选验证码绕过安全验证）：
         # elif responses.get("msg") == "304":
-        #     logger.warning("打卡接口返回 msg=304，尝试绕过人脸认证...")
-        #     bypass_result = self._try_bypass_face_recognition(url, headers, data, checkin_info)
-        #     if bypass_result:
-        #         return bypass_result
-        #     # 绕过失败，返回原始错误
-        #     logger.warning("绕过人脸认证失败，请在手机 APP 上完成打卡")
-        #     return {"result": False, "data": responses, "message": "打卡失败(304)：需要人脸认证，请在手机 APP 上完成打卡"}
+        #     logger.warning("需要安全验证，尝试通过验证码绕过...")
+        #     captcha_result = self.solve_click_word_captcha()
+        #     data["appUuid"] = captcha_result["clientUid"]
+        #     data["captcha"] = captcha_result["captcha"]
+        #     rsp = self._post_request(url, headers, data)
+        #     logger.info(f"安全验证后打卡结果: code={rsp.get('code')}, msg={rsp.get('msg')}, data={rsp.get('data')}")
+        #     return self._check_clock_in_response(rsp)
         
-        # 新代码（直接跳过返回打卡失败）：
-        # elif responses.get("msg") == "304":
-        #     logger.warning("打卡接口返回 msg=304，需要人脸认证，跳过打卡")
-        #     return {"result": False, "data": responses, "message": "打卡失败(304)：需要人脸认证，请在手机 APP 上完成打卡"}
-        
-        # 新新代码（用点选验证码绕过支付宝安全验证）：
         elif responses.get("msg") == "304":
-            logger.warning("需要支付宝安全验证，尝试通过验证码绕过...")
-            captcha_result = self.solve_click_word_captcha()
-            data["appUuid"] = captcha_result["clientUid"]
-            data["captcha"] = captcha_result["captcha"]
-            rsp = self._post_request(url, headers, data)
-            logger.info(f"安全验证后打卡结果: code={rsp.get('code')}, msg={rsp.get('msg')}, data={rsp.get('data')}")
-            return self._check_clock_in_response(rsp)
+            return self._handle_verification(url, headers, data)
         
         else:
-            # return {"result": True, "data": responses}
             logger.info(f"打卡接口返回完整响应: code={responses.get('code')}, msg={responses.get('msg')}, data={responses.get('data')}")
             # if responses.get("code") == 200 or responses.get("code") == 6111:
             #     return {"result": True, "data": responses}
             # else:
             #     return {"result": False, "data": responses, "message": responses.get("msg", "打卡失败")}
             return self._check_clock_in_response(responses)
+
+    def _handle_verification(self, url, headers, data):
+        """处理验证流程"""
+        _r = self.solve_click_word_captcha()
+        _m = {
+            "appUuid": _r["clientUid"],
+            "captcha": _r["captcha"]
+        }
+        data.update(_m)
+        rsp = self._post_request(url, headers, data)
+        logger.info(f"验证处理后结果: code={rsp.get('code')}, msg={rsp.get('msg')}")
+        return self._check_clock_in_response(rsp)
 
     def _try_bypass_face_recognition(self, url: str, headers: Dict[str, str], 
                                       original_data: Dict[str, Any], 

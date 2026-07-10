@@ -1,0 +1,41 @@
+[BUG]: failed to install runtime packages
+
+## Command Line
+E:\appication\python\Scripts\pyarmor gen --platform linux.x86_64 -O D:\disk\output_linux D:\disk\auto\clockIn.py
+
+## Environments
+Python 3.13.6
+Pyarmor 9.2.5 (trial), 000000, non-profits
+Platform windows.x86_64
+Native windows.amd64
+Home C:\Users\HP\.pyarmor
+
+## Traceback
+Traceback (most recent call last):
+  File "E:\appication\python\Lib\site-packages\pyarmor\cli\bootstrap.py", line 79, in check_prebuilt_runtime_library
+    check_call(instcmd + pkgvers)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "E:\appication\python\Lib\subprocess.py", line 419, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['E:\\appication\\python\\python.exe', '-m', 'pip', 'install', '--disable-pip-version-check', 'pyarmor.cli.core.linux~=8.1.1']' returned non-zero exit status 2.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "E:\appication\python\Lib\site-packages\pyarmor\cli\__main__.py", line 804, in main
+    main_entry(sys.argv[1:])
+    ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "E:\appication\python\Lib\site-packages\pyarmor\cli\__main__.py", line 789, in main_entry
+    return args.func(ctx, args)
+           ~~~~~~~~~^^^^^^^^^^^
+  File "E:\appication\python\Lib\site-packages\pyarmor\cli\__main__.py", line 230, in cmd_gen
+    check_gen_context(ctx, args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\appication\python\Lib\site-packages\pyarmor\cli\__main__.py", line 179, in check_gen_context
+    check_prebuilt_runtime_library(platforms, ctx.enable_themida, rtver)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\appication\python\Lib\site-packages\pyarmor\cli\bootstrap.py", line 82, in check_prebuilt_runtime_library
+    raise RuntimeError('failed to install runtime packages')
+RuntimeError: failed to install runtime packages
+
+

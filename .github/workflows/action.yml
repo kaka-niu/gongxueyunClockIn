@@ -27,4 +27,4 @@ jobs:
       - name: 执行打卡
         env:
           USERS: ${{ secrets.USERS }}
-        run: python clockIn.py
+        run: python action.py

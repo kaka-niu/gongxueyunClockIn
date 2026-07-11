@@ -1,12 +1,17 @@
 import logging
 # from datetime import datetime
 from datetime import datetime, timezone, timedelta
+import sys
+import os
+import traceback
 
 from manager.ConfigManager import ConfigManager
 from manager.UserInfoManager import UserInfoManager
 from util.ApiService import ApiService
-from util.EmailService import send_clockin_notification
-from util.HelperFunctions import get_checkin_type, desensitize_name, desensitize_phone
+from util.EmailService import send_clockin_notification, send_email_notification
+from util.HelperFunctions import get_checkin_type, get_checkin_types, desensitize_name, desensitize_phone
+from step.fetchPlan import fetch_plan
+from step.login import login
 
 logger = logging.getLogger(__name__)
 
@@ -156,3 +161,103 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
 #       rsp = self._post_request(url, headers, data)
 #       return self._check_clock_in_response(rsp)
 # ============================================================
+
+
+# ======================
+# GitHub Actions 入口：日志配置 + 多用户打卡
+# ======================
+
+class CSTFormatter(logging.Formatter):
+    """自定义日志格式化器，使用中国标准时间 (UTC+8)"""
+    def formatTime(self, record, datefmt=None):
+        ct = datetime.fromtimestamp(record.created, tz=CST)
+        if datefmt:
+            return ct.strftime(datefmt)
+        return ct.strftime('%Y-%m-%d %H:%M:%S') + f',{int(ct.microsecond / 1000):03d}'
+
+
+log_file = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "main.log")
+formatter = CSTFormatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler.setFormatter(formatter)
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[file_handler, stream_handler]
+)
+
+
+def execute_tasks_for_user(user_index: int) -> bool:
+    """为单个用户执行打卡任务"""
+    try:
+        ConfigManager.set_current_user(user_index)
+        UserInfoManager.set_current_user(user_index)
+        
+        phone = ConfigManager.get("user", "phone", default="未知")
+        phone_masked = desensitize_phone(phone)
+        logging.info(f"========== 开始处理用户 {user_index + 1}: {phone_masked} ==========")
+        
+        isLogin = login()
+        if not isLogin:
+            logging.warning(f"用户 {phone_masked} 登录失败")
+            return False
+
+        logging.info(f"用户类型：{UserInfoManager.get('roleKey')}")
+        if UserInfoManager.get("userType") != "student":
+            logging.error(f"用户 {phone_masked} 不是学生，跳过打卡")
+            return False
+
+        hasPlan = fetch_plan()
+        if not hasPlan:
+            logging.warning(f"用户 {phone_masked} 未获取到打卡信息")
+            return False
+
+        checkin_types = get_checkin_types()
+        logging.info(f"打卡模式：{ConfigManager.get('clockIn', 'mode', default='single')}，共 {len(checkin_types)} 次打卡")
+        for checkin in checkin_types:
+            result = clock_in(force_type=checkin)
+            logging.info(result)
+
+        logging.info(f"用户 {phone_masked} 打卡任务完成")
+        return True
+
+    except Exception as e:
+        phone = ConfigManager.get("user", "phone", default="未知")
+        phone_masked = desensitize_phone(phone)
+        logging.error(f"用户 {phone_masked} 执行打卡任务时发生异常")
+        logging.error(traceback.format_exc())
+        return False
+
+
+def execute_tasks():
+    try:
+        logging.info("工学云自动打卡 - GitHub Action 模式启动")
+        
+        user_count = ConfigManager.get_user_count()
+        if user_count == 0:
+            logging.error("未找到任何用户配置")
+            return
+        
+        logging.info(f"共 {user_count} 个用户需要打卡")
+        
+        success_count = 0
+        for i in range(user_count):
+            logging.info("=" * 50)
+            if execute_tasks_for_user(i):
+                success_count += 1
+        
+        logging.info(f"========== 所有用户处理完成: {success_count}/{user_count} 个用户成功 ==========")
+        
+        send_email_notification(
+            title="工学云打卡任务汇总",
+            content=f"打卡任务执行完毕\n\n成功: {success_count}/{user_count}\n时间: {datetime.now(CST).strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+
+    except Exception as e:
+        logging.error("执行打卡任务时发生异常")
+        logging.error(traceback.format_exc())
+
+
+if __name__ == '__main__':
+    execute_tasks()

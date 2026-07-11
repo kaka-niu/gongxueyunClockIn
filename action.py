@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 import sys
 import os
+import json
 import traceback
 
 from manager.ConfigManager import ConfigManager
@@ -126,47 +127,6 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     return result
 
 
-# ============================================================
-# _handle_verification — 打卡 304 安全验证绕过处理逻辑
-# 位置：ApiService._handle_verification()
-# 触发：submit_clock_in() 中 elif responses.get("msg") == "304"
-# ============================================================
-#
-# 处理流程：
-#   1. self.solve_click_word_captcha()
-#      → 获取点选验证码图片 → OCR 识别文字 → 模拟点击 → 校验
-#      → 返回 { "captcha": 加密结果, "clientUid": 客户端标识 }
-#
-#   2. 字段映射到打卡请求体：
-#      clientUid → data["appUuid"]
-#      captcha   → data["captcha"]
-#
-#   3. data.update({"appUuid": ..., "captcha": ...})
-#      → 将验证结果注入原始打卡请求数据
-#
-#   4. self._post_request(url, headers, data)
-#      → 携带 appUuid + captcha 重新请求打卡接口
-#
-#   5. self._check_clock_in_response(rsp)
-#      → 检查返回结果，判断是否真正打卡成功
-#
-# 伪代码：
-#   def _handle_verification(self, url, headers, data):
-#       _r = self.solve_click_word_captcha()
-#       _m = {
-#           "appUuid": _r["clientUid"],
-#           "captcha": _r["captcha"]
-#       }
-#       data.update(_m)
-#       rsp = self._post_request(url, headers, data)
-#       return self._check_clock_in_response(rsp)
-# ============================================================
-
-
-# ======================
-# GitHub Actions 入口：日志配置 + 多用户打卡
-# ======================
-
 class CSTFormatter(logging.Formatter):
     """自定义日志格式化器，使用中国标准时间 (UTC+8)"""
     def formatTime(self, record, datefmt=None):
@@ -257,7 +217,60 @@ def execute_tasks():
     except Exception as e:
         logging.error("执行打卡任务时发生异常")
         logging.error(traceback.format_exc())
+# ============================================================
+# _handle_verification — 打卡 304 安全验证绕过处理逻辑
+# 位置：ApiService._handle_verification()
+# 触发：submit_clock_in() 中 elif responses.get("msg") == "304"
+# ============================================================
+#
+# 处理流程：
+#   1. self.solve_click_word_captcha()
+#      → 获取点选验证码图片 → OCR 识别文字 → 模拟点击 → 校验
+#      → 返回 { "captcha": 加密结果, "clientUid": 客户端标识 }
+#
+#   2. 字段映射到打卡请求体：
+#      clientUid → data["appUuid"]
+#      captcha   → data["captcha"]
+#
+#   3. data.update({"appUuid": ..., "captcha": ...})
+#      → 将验证结果注入原始打卡请求数据
+#
+#   4. self._post_request(url, headers, data)
+#      → 携带 appUuid + captcha 重新请求打卡接口
+#
+#   5. self._check_clock_in_response(rsp)
+#      → 检查返回结果，判断是否真正打卡成功
+#
+# 伪代码：
+#   def _handle_verification(self, url, headers, data):
+#       _r = self.solve_click_word_captcha()
+#       _m = {
+#           "appUuid": _r["clientUid"],
+#           "captcha": _r["captcha"]
+#       }
+#       data.update(_m)
+#       rsp = self._post_request(url, headers, data)
+#       return self._check_clock_in_response(rsp)
+# ============================================================
 
+
+# ======================
+# GitHub Actions 入口：日志配置 + 多用户打卡
+# ======================
 
 if __name__ == '__main__':
+   
+    users_json = os.environ.get("USERS", "")
+    if users_json:
+        try:
+            user_config_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "user", "config.json")
+            os.makedirs(os.path.dirname(user_config_path), exist_ok=True)
+            users_data = json.loads(users_json)
+            with open(user_config_path, "w", encoding="utf-8") as f:
+                json.dump(users_data, f, ensure_ascii=False, indent=2)
+            logging.info(f"已从 USERS 环境变量写入配置: {user_config_path}")
+            # 重置 ConfigManager 缓存，确保读取最新配置
+            ConfigManager._config_cache = None
+        except Exception as e:
+            logging.error(f"写入 USERS 配置失败: {e}")
     execute_tasks()

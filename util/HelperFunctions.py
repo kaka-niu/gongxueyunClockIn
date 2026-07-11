@@ -1,6 +1,7 @@
 import logging
 import threading
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -14,6 +15,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# 中国标准时间 (UTC+8)
+CST = timezone(timedelta(hours=8))
+
 
 def get_current_month_info() -> dict:
     """
@@ -25,7 +29,8 @@ def get_current_month_info() -> dict:
     Returns:
         包含当前月份开始和结束时间的字典。
     """
-    now = datetime.now()
+    # now = datetime.now()
+    now = datetime.now(CST)
     # 当前月份的第一天
     start_of_month = datetime(now.year, now.month, 1)
 
@@ -112,7 +117,8 @@ def is_workday_realtime() -> bool:
         bool: True 表示是法定工作日，False 表示是非工作日（周末或节假日）
     """
 
-    check_date = datetime.today()
+    # check_date = datetime.today()
+    check_date = datetime.now(CST)
     date_str = check_date.strftime("%Y-%m-%d")
     url = f"https://timor.tech/api/holiday/info/{date_str}"
 

@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime
+# from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from manager.ConfigManager import ConfigManager
 from manager.UserInfoManager import UserInfoManager
@@ -8,11 +9,15 @@ from util.HelperFunctions import get_checkin_type, desensitize_name, desensitize
 
 logger = logging.getLogger(__name__)
 
+# 中国标准时间 (UTC+8)
+CST = timezone(timedelta(hours=8))
+
 
 def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     logging.info("执行签到打卡")
 
-    current_time = datetime.now()
+    # current_time = datetime.now()
+    current_time = datetime.now(CST)
 
     # 获取打卡类型：优先使用传入的强制类型，否则从配置读取
     if force_type:

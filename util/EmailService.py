@@ -3,12 +3,16 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
-from datetime import datetime
+# from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from manager.ConfigManager import ConfigManager
 from util.HelperFunctions import desensitize_phone, desensitize_address
 
 logger = logging.getLogger(__name__)
+
+# 中国标准时间 (UTC+8)
+CST = timezone(timedelta(hours=8))
 
 
 def send_email_notification(title: str, content: str) -> bool:
@@ -54,7 +58,7 @@ def send_email_notification(title: str, content: str) -> bool:
 
 {content}
 
-发送时间：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+发送时间：{datetime.now(CST).strftime("%Y-%m-%d %H:%M:%S")}
         """
 
         html_content = f"""
@@ -62,7 +66,7 @@ def send_email_notification(title: str, content: str) -> bool:
 <body>
     <h2>工学云打卡通知</h2>
     <p>{content.replace(chr(10), "<br>")}</p>
-    <p style="color: #999; font-size: 12px;">发送时间：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+    <p style="color: #999; font-size: 12px;">发送时间：{datetime.now(CST).strftime("%Y-%m-%d %H:%M:%S")}</p>
 </body>
 </html>
         """

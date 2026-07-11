@@ -2,6 +2,7 @@ import logging
 import sys
 import os
 import traceback
+from datetime import datetime, timezone, timedelta
 
 from manager.ConfigManager import ConfigManager
 from step.clockIn import clock_in
@@ -11,16 +12,41 @@ from manager.UserInfoManager import UserInfoManager
 from util.HelperFunctions import get_checkin_types, desensitize_phone
 
 # ======================
+# 中国标准时间 (UTC+8)
+# ======================
+CST = timezone(timedelta(hours=8))
+
+
+class CSTFormatter(logging.Formatter):
+    """自定义日志格式化器，使用中国标准时间 (UTC+8)"""
+    def formatTime(self, record, datefmt=None):
+        ct = datetime.fromtimestamp(record.created, tz=CST)
+        if datefmt:
+            return ct.strftime(datefmt)
+        return ct.strftime('%Y-%m-%d %H:%M:%S') + f',{int(ct.microsecond / 1000):03d}'
+
+
+# ======================
 # 日志配置
 # ======================
 log_file = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "main.log")
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='%(asctime)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.FileHandler(log_file, encoding='utf-8'),  # 写入日志文件
+#         logging.StreamHandler(sys.stdout)  # 控制台输出
+#     ]
+# )
+# 使用 CST 时区的日志配置
+formatter = CSTFormatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler.setFormatter(formatter)
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),  # 写入日志文件
-        logging.StreamHandler(sys.stdout)  # 控制台输出
-    ]
+    handlers=[file_handler, stream_handler]
 )
 
 

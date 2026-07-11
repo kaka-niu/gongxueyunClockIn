@@ -4,7 +4,8 @@ import logging
 import os
 import random
 import struct
-from datetime import datetime
+# from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageDraw, ImageFont
 
 from cv2.typing import MatLike
@@ -13,6 +14,9 @@ import onnxruntime as ort
 import cv2
 
 logger = logging.getLogger(__name__)
+
+# 中国标准时间 (UTC+8)
+CST = timezone(timedelta(hours=8))
 
 
 def calculate_precise_slider_distance(target_start_x: int, target_end_x: int,
@@ -829,7 +833,8 @@ def save_click_word_snapshot(image: np.ndarray, bboxes: list, click_points: list
     # PIL 转回 OpenCV 格式保存
     annotated = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    timestamp = datetime.now(CST).strftime("%Y%m%d_%H%M%S_%f")
     filename = os.path.join(snapshot_dir,
                             f"click_word_{stage}_{timestamp}.png")
     cv2.imwrite(filename, annotated)

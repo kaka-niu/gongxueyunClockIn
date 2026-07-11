@@ -9,6 +9,7 @@ from step.clockIn import clock_in
 from step.fetchPlan import fetch_plan
 from step.login import login
 from manager.UserInfoManager import UserInfoManager
+from util.EmailService import send_email_notification
 from util.HelperFunctions import get_checkin_types, desensitize_phone
 
 # ======================
@@ -122,6 +123,17 @@ def execute_tasks():
                 success_count += 1
         
         logging.info(f"========== 所有用户处理完成: {success_count}/{user_count} 个用户成功 ==========")
+        
+        # 发送汇总邮件通知
+        # send_email_notification(
+        #     title="工学云打卡任务汇总",
+        #     content=f"打卡任务执行完毕\n\n成功: {success_count}/{user_count}\n时间: {datetime.now(CST).strftime('%Y-%m-%d %H:%M:%S')}"
+        # )
+        send_email_notification(
+            title="工学云打卡任务汇总",
+            content=f"打卡任务执行完毕\n\n成功: {success_count}/{user_count}\n时间: {datetime.now(CST).strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        
         input("按回车键退出...")
 
     except Exception as e:

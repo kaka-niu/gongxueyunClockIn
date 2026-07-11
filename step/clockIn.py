@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from manager.ConfigManager import ConfigManager
 from manager.UserInfoManager import UserInfoManager
 from util.ApiService import ApiService
+from util.EmailService import send_clockin_notification
 from util.HelperFunctions import get_checkin_type, desensitize_name, desensitize_phone
 
 logger = logging.getLogger(__name__)
@@ -66,24 +67,58 @@ def clock_in(force_type: dict[str, str] = None) -> dict[str, str]:
     # success = {"result": True, "data": ""}
 
     # 记录获取结果
+    # if success.get("result"):
+    #     # logger.info("打卡成功")
+    #     # # content = f"签到账号：{ConfigManager.get("user", "phone")}\n签到地点：{ConfigManager.get("clockIn", "location", "address")}"
+    #     # content = f"签到账号：{ConfigManager.get('user', 'phone')}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
+    #     # return {"title": "工学云签到成功通知", "content": content}
+    #     if success.get("message"):
+    #         logger.info(success.get("message"))
+    #         return {"title": "工学云签到任务通知", "content": success.get("message")}
+    #     logger.info("打卡成功")
+    #     # content = f"签到账号：{ConfigManager.get('user', 'phone')}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
+    #     phone = ConfigManager.get('user', 'phone')
+    #     phone_masked = desensitize_phone(phone)
+    #     content = f"签到账号：{phone_masked}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
+    #     return {"title": "工学云签到成功通知", "content": content}
+    # else:
+    #     # logger.warning(f"打卡失败：{success.get("message")}")
+    #     logger.warning(f"打卡失败：{success.get('message')}")
+    #     return {"title": "fail", "content": success.get('message')}
+
+    phone = ConfigManager.get('user', 'phone')
+    location = ConfigManager.get('clockIn', 'location', 'address')
+
     if success.get("result"):
-        # logger.info("打卡成功")
-        # # content = f"签到账号：{ConfigManager.get("user", "phone")}\n签到地点：{ConfigManager.get("clockIn", "location", "address")}"
-        # content = f"签到账号：{ConfigManager.get('user', 'phone')}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
-        # return {"title": "工学云签到成功通知", "content": content}
         if success.get("message"):
             logger.info(success.get("message"))
-            return {"title": "工学云签到任务通知", "content": success.get("message")}
-        logger.info("打卡成功")
-        # content = f"签到账号：{ConfigManager.get('user', 'phone')}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
-        phone = ConfigManager.get('user', 'phone')
-        phone_masked = desensitize_phone(phone)
-        content = f"签到账号：{phone_masked}\n签到地点：{ConfigManager.get('clockIn', 'location', 'address')}"
-        return {"title": "工学云签到成功通知", "content": content}
+            result = {"title": "工学云签到任务通知", "content": success.get("message")}
+        else:
+            logger.info("打卡成功")
+            phone_masked = desensitize_phone(phone)
+            content = f"签到账号：{phone_masked}\n签到地点：{location}"
+            result = {"title": "工学云签到成功通知", "content": content}
+        # 发送邮件通知
+        send_clockin_notification(
+            phone=phone,
+            location=location,
+            checkin_type=display_type,
+            success=True,
+            message=result.get("content", "")
+        )
     else:
         # logger.warning(f"打卡失败：{success.get("message")}")
         logger.warning(f"打卡失败：{success.get('message')}")
-        return {"title": "fail", "content": success.get('message')}
+        result = {"title": "fail", "content": success.get('message')}
+        # 发送邮件通知
+        send_clockin_notification(
+            phone=phone,
+            location=location,
+            checkin_type=display_type,
+            success=False,
+            message=success.get('message', '')
+        )
+    return result
 
 
 # ============================================================

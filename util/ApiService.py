@@ -199,8 +199,9 @@ class ApiService:
                     self._get_authenticated_headers(),
                     verification_payload,
                 )
-            except ValueError:
-                logger.warning("验证码校验请求失败，重试中...")
+            except ValueError as e:
+                # logger.warning("验证码校验请求失败，重试中...")
+                logger.warning(f"验证码校验请求失败 (第{retry_count + 1}次): {e}，重试中...")
                 retry_count += 1
                 time.sleep(random.uniform(1, 3))
                 continue
@@ -220,12 +221,17 @@ class ApiService:
                 }
 
             # 验证失败，增加重试次数
+            # logger.warning(f"验证码校验失败 (第{retry_count + 1}次): code={verification_response.get('code')}, msg={verification_response.get('msg')}, 坐标={captcha_solution}")
+            logger.warning(f"验证码校验失败 (第{retry_count + 1}次): code={verification_response.get('code')}, msg={verification_response.get('msg')}")
+            logger.warning(f"发送的坐标: {captcha_solution}")
+            logger.warning(f"目标文字: {captcha_response['data'].get('wordList')}")
             retry_count += 1
             # 随机等待以模拟正常用户行为
             time.sleep(random.uniform(1, 3))
 
         # 超过最大重试次数，抛出异常
-        raise Exception("通过点选验证码失败")
+        # raise Exception("通过点选验证码失败")
+        raise Exception(f"通过点选验证码失败 (已重试{max_retries}次)")
 
     def _get_authenticated_headers(
             self,
@@ -494,10 +500,6 @@ class ApiService:
         
         else:
             logger.info(f"打卡接口返回完整响应: code={responses.get('code')}, msg={responses.get('msg')}, data={responses.get('data')}")
-            # if responses.get("code") == 200 or responses.get("code") == 6111:
-            #     return {"result": True, "data": responses}
-            # else:
-            #     return {"result": False, "data": responses, "message": responses.get("msg", "打卡失败")}
             return self._check_clock_in_response(responses)
 
     def _handle_verification(self, url, headers, data):
@@ -516,12 +518,11 @@ class ApiService:
                                       original_data: Dict[str, Any], 
                                       checkin_info: Dict[str, Any]) -> Optional[dict]:
         """
-        尝试绕过304人脸认证
+        尝试绕过msg 304 支付宝认证
         
         策略：
         1. 修改设备参数（将 isPhysicalDevice 改为 false）
         2. 尝试使用旧版本API（v5）
-        3. 添加人脸认证相关参数（faceVerified=false）
         
         Args:
             url: 原始请求URL
@@ -582,44 +583,6 @@ class ApiService:
         except Exception as e:
             logger.warning(f"策略2失败: {e}")
         
-        # 策略3：修改version参数
-        logger.info("策略3：修改version参数")
-        try:
-            bypass_headers = headers.copy()
-            bypass_headers["version"] = "5.30.0"  # 使用旧版本号
-            
-            bypass_data = original_data.copy()
-            bypass_data["version"] = "5.30.0"
-            
-            rsp3 = self._post_request(url, bypass_headers, bypass_data)
-            logger.info(f"策略3响应: code={rsp3.get('code')}, msg={rsp3.get('msg')}")
-            
-            if rsp3.get("msg") == "success" or (rsp3.get("code") == 200 and rsp3.get("data")):
-                logger.info("策略3绕过成功！")
-                return self._check_clock_in_response(rsp3)
-        except Exception as e:
-            logger.warning(f"策略3失败: {e}")
-        
-        # 策略4：添加模拟的人脸认证信息
-        logger.info("策略4：添加模拟人脸认证信息")
-        try:
-            bypass_data = original_data.copy()
-            bypass_data["faceVerified"] = True
-            bypass_data["faceVerifyTime"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            bypass_data["faceScore"] = 0.95  # 模拟人脸相似度分数
-            bypass_data["isFaceVerify"] = True
-            
-            rsp4 = self._post_request(url, headers, bypass_data)
-            logger.info(f"策略4响应: code={rsp4.get('code')}, msg={rsp4.get('msg')}")
-            
-            if rsp4.get("msg") == "success" or (rsp4.get("code") == 200 and rsp4.get("data")):
-                logger.info("策略4绕过成功！")
-                return self._check_clock_in_response(rsp4)
-        except Exception as e:
-            logger.warning(f"策略4失败: {e}")
-        
-        logger.warning("所有绕过策略均失败")
-        return None
 
     def _check_clock_in_response(self, rsp: Dict[str, Any]) -> dict:
         """检查打卡接口返回结果，根据 msg 和 data 判断是否真正成功
@@ -650,8 +613,8 @@ class ApiService:
 
         # msg=304: 需要人脸认证，脚本无法处理，需在手机上手动打卡
         if msg == "304":
-            logger.warning("打卡接口返回 msg=304，需要人脸认证，脚本无法处理")
-            return {"result": False, "data": rsp, "message": "打卡失败(304)：需要人脸认证，请在手机 APP 上完成打卡"}
+            logger.warning("打卡接口返回 msg=304，需要认证，正在尝试")
+            return {"result": False, "data": rsp, "message": "打卡失败(304)：需要认证，正在尝试完成打卡"}
 
         # data 为空视为失败
         if data is None:

@@ -15,6 +15,9 @@ import cv2
 
 logger = logging.getLogger(__name__)
 
+# 快照开关（action.py 设为 False 禁用）
+ENABLE_SNAPSHOTS = True
+
 # 中国标准时间 (UTC+8)
 CST = timezone(timedelta(hours=8))
 
@@ -894,7 +897,8 @@ def recognize_clickWord_captcha(target: str, wordlist: list) -> str:
             logger.warning(f"未找到字符: {word}")
 
     # 保存快照（检测框 + 点击坐标）
-    save_click_word_snapshot(image, bboxes, random_coordinates, wordlist,
-                             recognized_dict, stage="predict")
+    if ENABLE_SNAPSHOTS:
+        save_click_word_snapshot(image, bboxes, random_coordinates, wordlist,
+                                 recognized_dict, stage="predict")
 
     return json.dumps(random_coordinates, separators=(",", ":"))

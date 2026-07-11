@@ -17,6 +17,9 @@ from util.HelperFunctions import get_current_month_info
 
 logger = logging.getLogger(__name__)
 
+# 调试日志开关（action.py 设为 False 禁用）
+ENABLE_DEBUG_LOGS = False
+
 # 常量
 BASE_URL = "https://api.moguding.net:9000/"
 HEADERS = {
@@ -258,7 +261,8 @@ class ApiService:
         }
         if sign_data:
             headers["sign"] = create_sign(*sign_data)
-            logger.info(f"[DEBUG] _get_authenticated_headers 生成签名: {headers['sign']}")
+            if ENABLE_DEBUG_LOGS:
+                logger.info(f"[DEBUG] _get_authenticated_headers 生成签名: {headers['sign']}")
         return headers
 
     def login(self) -> bool:
@@ -401,7 +405,7 @@ class ApiService:
         logger.info(f'打卡类型：{checkin_info.get("type")}')
 
         # ========== 调试日志：打印签名组成 ==========
-        if sign_data:
+        if ENABLE_DEBUG_LOGS and sign_data:
             logger.info(f"[DEBUG] 签名组成字段: device={sign_data[0]}")
             logger.info(f"[DEBUG] 签名组成字段: type={sign_data[1]}")
             logger.info(f"[DEBUG] 签名组成字段: planId={sign_data[2]}")
@@ -463,9 +467,10 @@ class ApiService:
         headers = self._get_authenticated_headers(sign_data)
 
         # ========== 调试日志：打印完整请求信息 ==========
-        logger.info(f"[DEBUG] 请求URL: {BASE_URL}{url}")
-        logger.info(f"[DEBUG] 请求头: {json.dumps(headers, ensure_ascii=False)}")
-        logger.info(f"[DEBUG] 请求体(部分关键字段): device={data.get('device')}, type={data.get('type')}, planId={data.get('planId')}, userId={data.get('userId')}, address={data.get('address')}, lat={data.get('latitude')}, lng={data.get('longitude')}, version={data.get('version')}")
+        if ENABLE_DEBUG_LOGS:
+            logger.info(f"[DEBUG] 请求URL: {BASE_URL}{url}")
+            logger.info(f"[DEBUG] 请求头: {json.dumps(headers, ensure_ascii=False)}")
+            logger.info(f"[DEBUG] 请求体(部分关键字段): device={data.get('device')}, type={data.get('type')}, planId={data.get('planId')}, userId={data.get('userId')}, address={data.get('address')}, lat={data.get('latitude')}, lng={data.get('longitude')}, version={data.get('version')}")
         # ========== 调试日志结束 ==========
 
         responses = self._post_request(url, headers, data)

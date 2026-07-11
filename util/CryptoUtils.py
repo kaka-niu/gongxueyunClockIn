@@ -6,6 +6,9 @@ from aes_pkcs5.algorithms.aes_ecb_pkcs5_padding import AESECBPKCS5Padding
 # 配置日志
 logger = logging.getLogger(__name__)
 
+# 调试日志开关（action.py 设为 False 禁用）
+ENABLE_DEBUG_LOGS = False
+
 
 def create_sign(*args) -> str:
     """
@@ -27,8 +30,9 @@ def create_sign(*args) -> str:
         sign_str = "".join(args) + "3478cbbc33f84bd00d75d7dfa69e0daa"
         # 使用MD5对最终字符串进行加密，并返回加密后的十六进制签名
         sign_result = md5(sign_str.encode("utf-8")).hexdigest()
-        logger.info(f"[DEBUG] create_sign 拼接: {repr(sign_str)}")
-        logger.info(f"[DEBUG] create_sign 结果: {sign_result}")
+        if ENABLE_DEBUG_LOGS:
+            logger.info(f"[DEBUG] create_sign 拼接: {repr(sign_str)}")
+            logger.info(f"[DEBUG] create_sign 结果: {sign_result}")
         return sign_result
 
     except Exception as e:
